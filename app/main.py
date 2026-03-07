@@ -40,6 +40,8 @@ class QueryRequest(BaseModel):
 @app.post("/query")
 def query_endpoint(request: QueryRequest):
     query = request.query
+    if "model" not in state:
+        state["model"] = SentenceTransformer("all-MiniLM-L6-v2")
     
     # 1. Vectorize and Normalize
     # Normalizing makes the Dot Product equivalent to Cosine Similarity

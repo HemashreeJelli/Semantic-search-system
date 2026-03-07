@@ -32,16 +32,22 @@ class QueryRequest(BaseModel):
 def load_resources():
 
     if state["model"] is None:
-        state["model"] = SentenceTransformer("all-MiniLM-L6-v2")
+        state["model"] = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 
     if state["index"] is None:
-        state["index"] = faiss.read_index("models/faiss.index")
+        state["index"] = faiss.read_index(
+            os.path.join(BASE_DIR, "models/faiss.index")
+        )
 
     if state["gmm"] is None:
-        state["gmm"] = joblib.load("models/gmm_model.pkl")
+        state["gmm"] = joblib.load(
+            os.path.join(BASE_DIR, "models/gmm_model.pkl")
+        )
 
     if state["texts"] is None:
-        state["texts"] = pd.read_csv("data/cleaned_20ng.csv")["text"].tolist()
+        state["texts"] = pd.read_csv(
+            os.path.join(BASE_DIR, "data/cleaned_20ng.csv")
+        )["text"].tolist()
 
 
 @app.post("/query")

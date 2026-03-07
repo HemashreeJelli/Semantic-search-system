@@ -4,6 +4,3 @@ __pycache__/
 .env
 .DS_Store
 .ipynb_checkpoints
-models/embeddings.npy
-models/faiss.index
-models/gmm_model.pkl

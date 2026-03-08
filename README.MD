@@ -1,4 +1,4 @@
-# Semantic Search System (CASR)
+# Semantic Search System
 
 This project implements a **semantic search system** built on the **20 Newsgroups dataset**. It combines vector embeddings, clustering, and a semantic cache to efficiently retrieve relevant documents. The system exposes a **FastAPI API service** and includes **Docker containerisation** for reproducible deployment.
 

@@ -17,6 +17,7 @@ The system exposes a **FastAPI REST API** and supports **Docker containerisation
 * Top-K semantic document retrieval
 * FastAPI REST API
 * Docker containerisation for deployment
+* Docker Compose support for simplified container orchestration
 
 ---
 
@@ -24,37 +25,37 @@ The system exposes a **FastAPI REST API** and supports **Docker containerisation
 
 The system follows a **multi-stage semantic retrieval architecture**.
 
-1. **Embedding Generation**
+### 1. Embedding Generation
 
-   Queries and documents are embedded using a SentenceTransformer model.
+Queries and documents are embedded using a SentenceTransformer model.
 
-   ```
-   Text → SentenceTransformer → Dense Embedding
-   ```
+```
+Text → SentenceTransformer → Dense Embedding
+```
 
-2. **Dimensionality Reduction**
+### 2. Dimensionality Reduction
 
-   PCA reduces the embedding space before clustering.
+PCA reduces the embedding space before clustering.
 
-   ```
-   Embedding (384D) → PCA → Reduced Embedding (50D)
-   ```
+```
+Embedding (384D) → PCA → Reduced Embedding (50D)
+```
 
-3. **Semantic Clustering**
+### 3. Semantic Clustering
 
-   A Gaussian Mixture Model assigns queries to semantic clusters.
+A Gaussian Mixture Model assigns queries to semantic clusters.
 
-4. **Semantic Cache**
+### 4. Semantic Cache
 
-   The system checks a **cluster-scoped semantic cache** for previously processed queries.
+The system checks a **cluster-scoped semantic cache** for previously processed queries.
 
-5. **Vector Search**
+### 5. Vector Search
 
-   If no cache hit occurs, FAISS retrieves the **Top-K most similar documents**.
+If no cache hit occurs, FAISS retrieves the **Top-K most similar documents**.
 
-6. **Cache Storage**
+### 6. Cache Storage
 
-   The result is stored for faster future retrieval.
+The result is stored for faster future retrieval.
 
 ---
 
@@ -108,6 +109,7 @@ semantic-search-20ng
 ├── train_pipeline.py
 ├── requirements.txt
 ├── Dockerfile
+├── docker-compose.yml
 ├── .dockerignore
 ├── .gitignore
 └── README.md
@@ -160,7 +162,7 @@ Prepare the dataset.
 python preprocess.py
 ```
 
-This generates:
+This generates the cleaned dataset:
 
 ```
 data/cleaned_20ng.csv
@@ -195,7 +197,7 @@ pca_model.pkl    → PCA dimensionality reduction model
 
 ---
 
-# Run the API
+# Run the API (Local Development)
 
 Start the FastAPI server.
 
@@ -223,7 +225,6 @@ Performs semantic search on the dataset and returns the most relevant documents 
 
 Returns statistics about the semantic cache including total entries, hit count, miss count, and hit rate.
 
-
 ---
 
 ## DELETE `/cache`
@@ -246,7 +247,7 @@ Run the container
 docker run -p 8000:8000 semantic-search-api
 ```
 
-Open API docs
+Open API documentation
 
 ```
 http://localhost:8000/docs
@@ -254,13 +255,33 @@ http://localhost:8000/docs
 
 ---
 
-# Technologies Used
+# Docker Compose Usage
 
-* Python
-* FastAPI
-* SentenceTransformers
-* FAISS
-* Scikit-learn
-* NumPy
-* Pandas
-* Docker
+You can also run the application using Docker Compose.
+
+Build and start the container:
+
+```
+docker compose up --build
+```
+
+Run in the background:
+
+```
+docker compose up -d
+```
+
+Stop the container:
+
+```
+docker compose down
+```
+
+Open the API documentation
+
+```
+http://localhost:8000/docs
+```
+
+
+

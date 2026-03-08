@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  semantic-search-api:
+    build: .
+    container_name: semantic-search-api
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+
+    environment:
+      - PYTHONUNBUFFERED=1
+
+    restart: unless-stopped

@@ -51,6 +51,7 @@ semantic-search-20ng
 │   └── cleaned_20ng.csv
 │
 ├── models/
+│   ├── embeddings.npy
 │   ├── faiss.index
 │   └── gmm_model.pkl
 │
@@ -82,10 +83,16 @@ python -m venv venv
 
 Activate it:
 
-Windows
+### Windows
 
 ```
 venv\Scripts\activate
+```
+
+### Mac / Linux
+
+```
+source venv/bin/activate
 ```
 
 Install dependencies:
@@ -98,6 +105,8 @@ pip install -r requirements.txt
 
 # Data Preprocessing
 
+Prepare the dataset:
+
 ```
 python preprocess.py
 ```
@@ -106,18 +115,23 @@ python preprocess.py
 
 # Train the Retrieval Pipeline
 
+Run the training pipeline:
+
 ```
 python train_pipeline.py
 ```
 
-Artifacts generated:
+This generates the following artifacts inside the `models/` directory:
 
-* `models/faiss.index`
-* `models/gmm_model.pkl`
+* `embeddings.npy` — precomputed document embeddings
+* `faiss.index` — FAISS vector index used for similarity search
+* `gmm_model.pkl` — trained Gaussian Mixture Model used for fuzzy clustering
 
 ---
 
 # Run the API
+
+Start the FastAPI server:
 
 ```
 uvicorn app.main:app --reload
@@ -133,7 +147,9 @@ http://127.0.0.1:8000/docs
 
 # API Endpoints
 
-### POST `/query`
+## POST `/query`
+
+Performs semantic search over the dataset.
 
 Example request:
 
@@ -143,23 +159,47 @@ Example request:
 }
 ```
 
+Example response:
+
+```
+{
+ "query": "space shuttle launch",
+ "cache_hit": false,
+ "matched_query": null,
+ "similarity_score": null,
+ "result": "...retrieved document text...",
+ "dominant_cluster": 4
+}
+```
+
 ---
 
-### GET `/cache/stats`
+## GET `/cache/stats`
 
-Returns semantic cache statistics.
+Returns statistics about the semantic cache.
+
+Example response:
+
+```
+{
+ "total_entries": 5,
+ "hit_count": 3,
+ "miss_count": 7,
+ "hit_rate": 0.3
+}
+```
 
 ---
 
-### DELETE `/cache`
+## DELETE `/cache`
 
-Clears the semantic cache.
+Clears all entries from the semantic cache.
 
 ---
 
 # Docker Usage
 
-Build the image:
+Build the Docker image:
 
 ```
 docker build -t semantic-search-api .

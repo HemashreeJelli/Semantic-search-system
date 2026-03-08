@@ -1,40 +1,88 @@
 # Semantic Search System
 
-This project implements a **semantic search system** built on the **20 Newsgroups dataset**. It combines vector embeddings, clustering, and a semantic cache to efficiently retrieve relevant documents. The system exposes a **FastAPI API service** and includes **Docker containerisation** for reproducible deployment.
+This project implements a **semantic search system** built on the **20 Newsgroups dataset**.
+It combines **vector embeddings, clustering, and semantic caching** to efficiently retrieve relevant documents from a text corpus.
+
+The system exposes a **FastAPI REST API** and supports **Docker containerisation** for reproducible deployment.
 
 ---
 
 # Features
 
-* SentenceTransformer embeddings for semantic text representation
+* SentenceTransformer embeddings for semantic representation
+* PCA dimensionality reduction for efficient clustering
 * FAISS vector index for fast similarity search
-* Gaussian Mixture Model (GMM) for fuzzy clustering
-* Cluster-aware semantic caching for repeated queries
-* FastAPI REST API for retrieval
-* Docker containerisation for reproducible environments
+* Gaussian Mixture Model (GMM) for fuzzy semantic clustering
+* Cluster-aware semantic caching
+* Top-K semantic document retrieval
+* FastAPI REST API
+* Docker containerisation for deployment
 
 ---
 
 # System Architecture
 
-The retrieval pipeline follows a multi-stage architecture:
+The system follows a **multi-stage semantic retrieval architecture**.
 
 1. **Embedding Generation**
-   Queries and documents are embedded into dense vectors using a SentenceTransformer model.
 
-2. **Vector Search**
-   FAISS performs fast approximate nearest-neighbour search over document embeddings.
+   Queries and documents are embedded using a SentenceTransformer model.
 
-3. **Cluster Assignment**
-   A Gaussian Mixture Model assigns the query to a dominant semantic cluster.
+   ```
+   Text → SentenceTransformer → Dense Embedding
+   ```
 
-4. **Cluster-Aware Cache**
-   The system checks a cluster-scoped semantic cache to determine if a similar query has already been processed.
+2. **Dimensionality Reduction**
 
-5. **Result Retrieval**
-   If no cache hit occurs, FAISS retrieves the closest document and the result is stored in the cache for future queries.
+   PCA reduces the embedding space before clustering.
 
-This architecture improves retrieval efficiency by combining **vector search, clustering, and semantic caching**.
+   ```
+   Embedding (384D) → PCA → Reduced Embedding (50D)
+   ```
+
+3. **Semantic Clustering**
+
+   A Gaussian Mixture Model assigns queries to semantic clusters.
+
+4. **Semantic Cache**
+
+   The system checks a **cluster-scoped semantic cache** for previously processed queries.
+
+5. **Vector Search**
+
+   If no cache hit occurs, FAISS retrieves the **Top-K most similar documents**.
+
+6. **Cache Storage**
+
+   The result is stored for faster future retrieval.
+
+---
+
+# Retrieval Pipeline
+
+```
+Query
+ ↓
+SentenceTransformer
+ ↓
+Embedding (384D)
+ ↓
+Normalization
+ ↓
+PCA Reduction (50D)
+ ↓
+GMM Cluster Prediction
+ ↓
+Cluster-Aware Semantic Cache
+     ↓            ↓
+    Hit          Miss
+     ↓            ↓
+ Return       FAISS Search
+ Result           ↓
+             Top-K Retrieval
+                 ↓
+            Store in Cache
+```
 
 ---
 
@@ -53,7 +101,8 @@ semantic-search-20ng
 ├── models/
 │   ├── embeddings.npy
 │   ├── faiss.index
-│   └── gmm_model.pkl
+│   ├── gmm_model.pkl
+│   └── pca_model.pkl
 │
 ├── preprocess.py
 ├── train_pipeline.py
@@ -68,20 +117,20 @@ semantic-search-20ng
 
 # Setup
 
-Clone the repository:
+Clone the repository
 
 ```
 git clone <your-repo-link>
 cd semantic-search-20ng
 ```
 
-Create a virtual environment:
+Create a virtual environment
 
 ```
 python -m venv venv
 ```
 
-Activate it:
+Activate the environment
 
 ### Windows
 
@@ -95,7 +144,7 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-Install dependencies:
+Install dependencies
 
 ```
 pip install -r requirements.txt
@@ -105,33 +154,50 @@ pip install -r requirements.txt
 
 # Data Preprocessing
 
-Prepare the dataset:
+Prepare the dataset.
 
 ```
 python preprocess.py
+```
+
+This generates:
+
+```
+data/cleaned_20ng.csv
 ```
 
 ---
 
 # Train the Retrieval Pipeline
 
-Run the training pipeline:
+Run the training pipeline.
 
 ```
 python train_pipeline.py
 ```
 
-This generates the following artifacts inside the `models/` directory:
+This performs:
 
-* `embeddings.npy` — precomputed document embeddings
-* `faiss.index` — FAISS vector index used for similarity search
-* `gmm_model.pkl` — trained Gaussian Mixture Model used for fuzzy clustering
+* embedding generation
+* PCA dimensionality reduction
+* cluster discovery
+* GMM training
+* FAISS index creation
+
+Artifacts generated in `models/`:
+
+```
+embeddings.npy   → document embeddings
+faiss.index      → FAISS vector index
+gmm_model.pkl    → trained GMM model
+pca_model.pkl    → PCA dimensionality reduction model
+```
 
 ---
 
 # Run the API
 
-Start the FastAPI server:
+Start the FastAPI server.
 
 ```
 uvicorn app.main:app --reload
@@ -149,69 +215,38 @@ http://127.0.0.1:8000/docs
 
 ## POST `/query`
 
-Performs semantic search over the dataset.
-
-Example request:
-
-```
-{
- "query": "space shuttle launch"
-}
-```
-
-Example response:
-
-```
-{
- "query": "space shuttle launch",
- "cache_hit": false,
- "matched_query": null,
- "similarity_score": null,
- "result": "...retrieved document text...",
- "dominant_cluster": 4
-}
-```
+Performs semantic search on the dataset and returns the most relevant documents along with clustering information and cache status.
 
 ---
 
 ## GET `/cache/stats`
 
-Returns statistics about the semantic cache.
+Returns statistics about the semantic cache including total entries, hit count, miss count, and hit rate.
 
-Example response:
-
-```
-{
- "total_entries": 5,
- "hit_count": 3,
- "miss_count": 7,
- "hit_rate": 0.3
-}
-```
 
 ---
 
 ## DELETE `/cache`
 
-Clears all entries from the semantic cache.
+Clears all entries from the semantic cache and resets statistics.
 
 ---
 
 # Docker Usage
 
-Build the Docker image:
+Build the Docker image
 
 ```
 docker build -t semantic-search-api .
 ```
 
-Run the container:
+Run the container
 
 ```
 docker run -p 8000:8000 semantic-search-api
 ```
 
-Access the API:
+Open API docs
 
 ```
 http://localhost:8000/docs
@@ -223,7 +258,7 @@ http://localhost:8000/docs
 
 * Python
 * FastAPI
-* Sentence Transformers
+* SentenceTransformers
 * FAISS
 * Scikit-learn
 * NumPy
